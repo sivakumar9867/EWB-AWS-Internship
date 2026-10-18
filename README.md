@@ -201,3 +201,11 @@ EWB-AWS-Internship/
 This project provided practical experience in connecting separate AWS VPCs through VPC peering. By configuring routes, security group rules and SSH access, I demonstrated private IP communication between EC2 instances and practised troubleshooting connectivity issues.
 
 The project strengthened my understanding of AWS networking fundamentals, routing, access control and cloud infrastructure validation.
+
+## 12. Evidence Screenshot Index
+
+The evidence screenshots below are provided in `03_Evidence_Screenshots/`. Screenshots 01–13 have been replaced with the redacted versions used in the project portfolio.
+
+- `14_Available_Before_Cleanup.png` — Original evidence showing the EC2 instances before cleanup.
+- `15_Cleanup_Evidence.png` — Manually redacted screenshot documenting the cleanup/termination process.
+
