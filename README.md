@@ -204,8 +204,22 @@ The project strengthened my understanding of AWS networking fundamentals, routin
 
 ## 12. Evidence Screenshot Index
 
-The evidence screenshots below are provided in `03_Evidence_Screenshots/`. 
+The following evidence images are stored in `03_Evidence_Screenshots/`. Screenshots are copied from the matching evidence gallery images in the portfolio website; image bytes are preserved without re-encoding.
 
-- `14_Available_Before_Cleanup.png` — Original evidence showing the EC2 instances before cleanup.
-- `15_Cleanup_Evidence.png` — Manually redacted screenshot documenting the cleanup/termination process.
-
+1. `01_VPC_Peering_Active.png` — Active VPC peering connection.
+2. `02_VPC1_Route_Table.png` — VPC 1 route table.
+3. `03_VPC2_Route_Table.png` — VPC 2 route table.
+4. `04_Third_Route_Table.png` — Additional/third route table.
+5. `05_VPC1_Security_Group.png` — VPC 1 security-group rules.
+6. `06_VPC2_Security_Group.png` — VPC 2 security-group rules.
+7. `07_VPC2_Security_Group_SSH_Rule.png` — SSH rule for VPC 2.
+8. `08_EC2_Resource_Details_VPC1.png` — EC2 resource details for VPC 1.
+9. `09_EC2_Resource_Details_VPC2.png` — EC2 resource details for VPC 2.
+10. `10_Forward_Ping_Success.png` — Successful forward-direction ICMP test.
+11. `11_Reverse_Ping_Success.png` — Successful reverse-direction ICMP test.
+12. `12_Private_SSH_App_B.png` — Private SSH access evidence for App B.
+13. `13_Controlled_ICMP_Failure.png` — Controlled ICMP failure during troubleshooting.
+14. `14_Available_Before_Cleanup.png` — EC2 instances available before cleanup.
+15. `15_Cleanup_Evidence.png` — Manually redacted cleanup/termination evidence, copied without further image editing.
+16. `16_ICMP_Recovery_Success.png` — Successful ICMP test after troubleshooting.
+17. `17_Architecture_and_Resource_Inventory.png` — Architecture and resource inventory evidence.
