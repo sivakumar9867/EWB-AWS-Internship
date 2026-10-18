@@ -204,7 +204,7 @@ The project strengthened my understanding of AWS networking fundamentals, routin
 
 ## 12. Evidence Screenshot Index
 
-The evidence screenshots below are provided in `03_Evidence_Screenshots/`. Screenshots 01–13 have been replaced with the redacted versions used in the project portfolio.
+The evidence screenshots below are provided in `03_Evidence_Screenshots/`. 
 
 - `14_Available_Before_Cleanup.png` — Original evidence showing the EC2 instances before cleanup.
 - `15_Cleanup_Evidence.png` — Manually redacted screenshot documenting the cleanup/termination process.
