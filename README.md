@@ -1,225 +1,340 @@
-# AWS VPC Peering — Cross-VPC Private Communication
+# AWS VPC Peering — Cross-VPC Connectivity
+
+A hands-on AWS networking project demonstrating connectivity between two Virtual Private Clouds (VPCs) using **VPC Peering**, route table configuration, security group rules, and EC2 connectivity testing.
+
+The project explores how resources in separate VPCs can communicate using their VPC-assigned IP addresses through a peering connection.
 
 **Project:** EWB AWS Internship  
 **Cloud Platform:** Amazon Web Services (AWS)  
 **Region:** US East (Ohio) — `us-east-2`  
-**Service Category:** Networking & Security  
-**Project Type:** Hands-on Cloud Infrastructure Project
+**Services:** Amazon VPC, VPC Peering, Amazon EC2, Route Tables, Security Groups
 
-## 1. Project Overview
+---
 
-This project demonstrates how to establish private network connectivity between two Amazon Virtual Private Clouds (VPCs) using AWS VPC Peering.
+## Architecture
 
-Two VPCs were configured with separate IPv4 CIDR blocks. Each VPC contained an EC2 instance, and route tables and security group rules were configured to support communication between the private IP addresses of the instances.
+The following architecture diagram is included in the project repository.
 
-The project also explored SSH connectivity, private IP communication, route configuration and connectivity testing from the EC2 command line.
+![AWS VPC Peering Architecture](02_Architecture/AWS_VPC_Peering_Target_Architecture.png)
 
-## 2. Problem Statement
+[View full-size architecture diagram](02_Architecture/AWS_VPC_Peering_Target_Architecture.png)
 
-AWS resources deployed in separate VPCs are isolated by default. Applications running in different VPCs may need to communicate privately without relying on public IP addresses for communication between those networks.
+[Read the detailed project report (PDF)](01_Report/AWS-VPC-Peering-Report.pdf)
 
-The objective of this project was to establish a VPC peering connection, configure the required routes and security rules, and validate private communication between EC2 instances in two VPCs.
+## Project Overview
 
-## 3. Project Objectives
+Amazon VPC provides isolated virtual networks for deploying AWS resources. By default, resources in separate VPCs cannot communicate directly.
 
-- Create and configure two VPCs with distinct CIDR ranges.
-- Configure public and private subnet resources where required.
-- Establish a VPC peering connection between the VPCs.
-- Update both VPC route tables to direct traffic to the peer network through the peering connection.
-- Configure security group rules for required SSH and ICMP traffic.
-- Connect to EC2 instances using SSH and test private IP connectivity.
-- Validate connectivity from both sides and document the results.
+This project demonstrates how to establish connectivity between two VPCs using an AWS VPC Peering connection.
 
-## 4. Architecture and Configuration
+The lab involved:
+
+- Creating two VPCs with separate IPv4 CIDR blocks.
+- Deploying EC2 instances in the VPCs.
+- Establishing a VPC Peering connection.
+- Configuring route tables on both sides.
+- Configuring security groups for SSH and ICMP traffic.
+- Establishing SSH access to EC2 instances.
+- Testing connectivity between instances using their VPC-assigned IP addresses.
+- Troubleshooting failed connectivity and verifying successful communication.
+
+## Objectives
+
+- Understand AWS VPC architecture and CIDR addressing.
+- Configure connectivity between two separate VPCs.
+- Create and activate a VPC Peering connection.
+- Configure routes for communication between the VPC networks.
+- Understand security group rules for SSH and ICMP.
+- Access EC2 instances using SSH.
+- Explore SSH proxy-based access to an instance without a public IPv4 address.
+- Validate network connectivity and document troubleshooting evidence.
+
+## Network Configuration
 
 ### VPC 1 — EWB_AWS_Internship_VPC1
 
-- **VPC CIDR:** `28.0.0.0/16`
-- **EC2 instance:** `EWB_VPC1_EC2`
-- **Private IP shown in evidence:** `28.0.1.194`
-- **Public IP shown during testing:** `18.223.239.92`
-- **Security group:** `EWB_VPC1_EC2_SG`
-- **Route table:** `EWB_Public_Route_Table`
+| Configuration | Value |
+|---|---|
+| VPC name | `EWB_AWS_Internship_VPC1` |
+| IPv4 CIDR | `28.0.0.0/16` |
+| EC2 instance | `EWB_VPC1_EC2` |
+| Security group | `EWB_VPC1_EC2_SG` |
+| Route table | `EWB_Public_Route_Table` |
 
 ### VPC 2 — EWB_AWS_Internship_VPC2
 
-- **VPC CIDR:** `28.200.0.0/16`
-- **EC2 instance:** `EWB_VPC2_EC2`
-- **Private IP shown in evidence:** `28.200.1.179`
-- **Public IPv4 address:** None shown for this instance
-- **Security group:** `EWB_VPC2_EC2_SG`
+| Configuration | Value |
+|---|---|
+| VPC name | `EWB_AWS_Internship_VPC2` |
+| IPv4 CIDR | `28.200.0.0/16` |
+| EC2 instance | `EWB_VPC2_EC2` |
+| Security group | `EWB_VPC2_EC2_SG` |
+| Public IPv4 | None shown for the instance in the project evidence |
 
 ### VPC Peering Connection
 
-- **Connection name:** `EWB_VPC_Peering`
-- **Connection ID:** `pcx-003e95287deb1beb7`
-- **Region:** `us-east-2`
-- **Observed status:** Active
+| Configuration | Value |
+|---|---|
+| Connection name | `EWB_VPC_Peering` |
+| Region | `us-east-2` |
+| Observed status | Active |
 
-The AWS console evidence shows the peering connection between the two VPCs and corresponding routes to the peer CIDR blocks.
+The project evidence records an active peering connection between the two VPCs.
 
-> **Architecture note:** VPC peering is a private, one-to-one network connection. It does not automatically configure routes or permit traffic; the appropriate route table entries and security rules are also required.
+### CIDR Addressing Note
 
-## 5. Implementation Steps
+The lab uses `28.0.0.0/16` and `28.200.0.0/16`. These ranges are outside the private IPv4 ranges specified by RFC 1918.
 
-### Step 1 — Configure the VPCs
+AWS supports publicly routable CIDR blocks for VPCs, but recommends RFC 1918 address ranges for new VPC configurations. The original lab ranges are retained here to accurately document the completed exercise.
 
-Created two VPCs with separate IPv4 CIDR blocks:
+For future environments, use suitable, non-overlapping RFC 1918 ranges such as:
+
+- `10.0.0.0/16`
+- `172.16.0.0/16`
+- `192.168.0.0/20`
+
+Choose ranges after checking for conflicts with other connected networks.
+
+## Implementation
+
+### Step 1 — Create and Configure VPCs
+
+Created two separate VPCs in the `us-east-2` region with distinct IPv4 CIDR blocks.
 
 - VPC 1: `28.0.0.0/16`
 - VPC 2: `28.200.0.0/16`
 
-The separate address ranges allow the networks to be routed independently.
+The networks were configured with separate subnets and EC2 resources for connectivity testing.
 
-### Step 2 — Configure Subnets and EC2 Instances
+### Step 2 — Deploy EC2 Instances
 
-Configured the network resources and EC2 instances used for testing. The evidence identifies the instances as `EWB_VPC1_EC2` and `EWB_VPC2_EC2`.
+Created the EC2 instances used in the lab:
 
-The first instance had a public IPv4 address during SSH testing. The second instance was accessed through the first instance using SSH proxying.
+- `EWB_VPC1_EC2`
+- `EWB_VPC2_EC2`
+
+The first instance had a public IPv4 address during the SSH testing phase. The second instance did not have a public IPv4 address in the supplied evidence.
 
 ### Step 3 — Create the VPC Peering Connection
 
-Created a VPC peering connection named `EWB_VPC_Peering` between the two VPCs in the same AWS region.
+Created a VPC Peering connection named `EWB_VPC_Peering` between the two VPCs.
 
-The console screenshot records the connection as **Active**.
+The connection was established and its status was verified as **Active** in the AWS Management Console.
 
 ### Step 4 — Configure Route Tables
 
-Added routes so that each VPC could direct traffic to the other VPC's CIDR block through the peering connection.
+Configured routes on both sides so that traffic destined for the other VPC's CIDR block could use the peering connection.
 
-| Network | Destination | Route target |
+| Route table | Destination | Target |
 |---|---|---|
-| VPC 1 | `28.200.0.0/16` | VPC peering connection |
-| VPC 2 | `28.0.0.0/16` | VPC peering connection |
+| VPC 1 route table | `28.200.0.0/16` | VPC Peering connection |
+| VPC 2 route table | `28.0.0.0/16` | VPC Peering connection |
 
-The screenshots show these routes with an Active status. The VPC 1 route table also contains its local route and a default route through an internet gateway.
+The route tables also retain their respective local routes. The VPC 1 public route table includes an internet gateway default route as shown in the evidence.
+
+**Important:** Creating a peering connection alone does not configure routing. Appropriate routes must be added to the route tables used by the communicating subnets.
 
 ### Step 5 — Configure Security Groups
 
-Configured the EC2 security groups to support the traffic required for testing.
+Configured the EC2 security groups to permit the traffic required for testing.
 
-The supplied console evidence shows SSH rules on TCP port `22` and ICMP rules for connectivity testing. One security group also shows an SSH source restricted to a single IPv4 address using `/32`.
+The project evidence includes:
 
-Security group sources should be restricted to the appropriate trusted IP address or network CIDR. Avoid exposing SSH to the entire internet unless there is a specific, temporary requirement.
+- SSH access using TCP port `22`.
+- ICMP rules for ping-based connectivity testing.
+- A restricted SSH source using a single IPv4 address with a `/32` mask in one of the captured rules.
 
-### Step 6 — Connect Using SSH
+Security group rules should follow the principle of least privilege. Restrict SSH access to trusted sources and avoid unnecessarily exposing management ports to the internet.
 
-Used Windows PowerShell and SSH key files to connect to the first EC2 instance.
+### Step 6 — Establish SSH Connectivity
 
-A proxy connection was then used to access the second instance through the first instance. This demonstrates a bastion-style access pattern without requiring a public IPv4 address on the second instance.
+Used Windows PowerShell and SSH to access the first EC2 instance.
 
-**Important:** Private key files must remain local and must never be committed to a public GitHub repository.
+A proxy-based SSH connection was then used to access the second instance through the first instance.
 
-## 6. Connectivity Testing and Results
+This provided a way to reach the second EC2 instance without assigning it a public IPv4 address.
 
-The supplied terminal screenshots demonstrate the following:
+Private SSH keys should remain outside the repository and must never be committed to GitHub.
+
+## Connectivity Testing and Results
+
+Connectivity was tested using PowerShell and Linux terminal commands.
 
 | Test | Observed result |
 |---|---|
-| TCP connectivity to the first instance on port 22 | `TcpTestSucceeded: True` |
-| SSH connection to the first EC2 instance | Successful |
-| SSH proxy connection to the second EC2 instance | Successful |
-| Ping from `28.0.1.194` to `28.200.1.179` | 4 packets received, 0% packet loss |
-| Initial ping from `28.0.1.194` to `28.200.1.179` in another session | 100% packet loss |
-| Later ping from `28.0.1.194` to `28.200.1.179` | 4 packets received, 0% packet loss |
-| Ping from `28.200.1.179` to `28.0.1.194` | 4 packets received, 0% packet loss in the later screenshot |
+| TCP connectivity to the first EC2 instance on port 22 | Successful |
+| SSH access to the first EC2 instance | Successful |
+| SSH proxy access to the second EC2 instance | Successful |
+| Ping from VPC 1 instance to VPC 2 instance | Successful in later test |
+| Ping from VPC 2 instance to VPC 1 instance | Successful |
+| Initial ICMP connectivity test | Failed |
+| ICMP connectivity after troubleshooting | Successful |
 
-The initial failed ping followed by a successful test is useful evidence that connectivity troubleshooting and verification were part of the exercise.
+The evidence includes successful forward and reverse ping tests, along with an earlier failed ICMP test and a subsequent recovery test.
 
-Successful ping tests demonstrate ICMP reachability at the time of testing. They do not, by themselves, verify every application protocol or prove that all security controls are configured correctly.
+A successful ping confirms ICMP reachability at the time of testing. It does not independently verify every application protocol or service.
 
-## 7. Troubleshooting Considerations
+## Evidence Gallery
 
-If instances cannot communicate across a VPC peering connection, check:
+### 1. VPC Peering Connection
 
-1. The peering connection is active.
-2. Both VPCs use non-overlapping CIDR blocks.
-3. Each relevant route table contains a route to the other VPC's CIDR.
-4. Security groups permit the required source, protocol and port.
-5. Network ACLs permit the required inbound and outbound traffic.
-6. The destination instance and its operating system allow the traffic being tested.
-7. SSH key permissions, usernames and proxy settings are correct.
+![Active VPC Peering Connection](03_Evidence_Screenshots/01_VPC_Peering_Active.png)
 
-A failed ping does not always mean the peering connection is broken. ICMP may be blocked by a security group, network ACL or operating-system firewall.
+### 2. Route Table Configuration
 
-## 8. Key Learning Outcomes
+**VPC 1 route table**
+
+![VPC 1 Route Table](03_Evidence_Screenshots/02_VPC1_Route_Table.png)
+
+**VPC 2 route table**
+
+![VPC 2 Route Table](03_Evidence_Screenshots/03_VPC2_Route_Table.png)
+
+### 3. Connectivity Verification
+
+**Forward-direction ping**
+
+![Forward Ping Success](03_Evidence_Screenshots/10_Forward_Ping_Success.png)
+
+**Reverse-direction ping**
+
+![Reverse Ping Success](03_Evidence_Screenshots/11_Reverse_Ping_Success.png)
+
+### 4. SSH Access
+
+![Private SSH Access](03_Evidence_Screenshots/12_Private_SSH_Access.png)
+
+### 5. Troubleshooting and Recovery
+
+**Controlled ICMP failure**
+
+![Controlled ICMP Failure](03_Evidence_Screenshots/13_Controlled_ICMP_Failure.png)
+
+**Successful connectivity after troubleshooting**
+
+![ICMP Recovery Success](03_Evidence_Screenshots/16_ICMP_Recovery_Success.png)
+
+## Complete Evidence Index
+
+All 17 evidence screenshots are maintained in `03_Evidence_Screenshots/`.
+
+| No. | Evidence file | Description |
+|---:|---|---|
+| 01 | [01_VPC_Peering_Active.png](03_Evidence_Screenshots/01_VPC_Peering_Active.png) | Active VPC Peering connection |
+| 02 | [02_VPC1_Route_Table.png](03_Evidence_Screenshots/02_VPC1_Route_Table.png) | VPC 1 route table |
+| 03 | [03_VPC2_Route_Table.png](03_Evidence_Screenshots/03_VPC2_Route_Table.png) | VPC 2 route table |
+| 04 | [04_Third_Route_Table.png](03_Evidence_Screenshots/04_Third_Route_Table.png) | Additional route table evidence |
+| 05 | [05_VPC1_Security_Group.png](03_Evidence_Screenshots/05_VPC1_Security_Group.png) | VPC 1 security group |
+| 06 | [06_VPC2_Security_Group.png](03_Evidence_Screenshots/06_VPC2_Security_Group.png) | VPC 2 security group |
+| 07 | [07_VPC2_Security_Group_SSH_Rule.png](03_Evidence_Screenshots/07_VPC2_Security_Group_SSH_Rule.png) | VPC 2 SSH rule |
+| 08 | [08_EC2_Resource_Details_VPC1.png](03_Evidence_Screenshots/08_EC2_Resource_Details_VPC1.png) | VPC 1 EC2 resource details |
+| 09 | [09_EC2_Resource_Details_VPC2.png](03_Evidence_Screenshots/09_EC2_Resource_Details_VPC2.png) | VPC 2 EC2 resource details |
+| 10 | [10_Forward_Ping_Success.png](03_Evidence_Screenshots/10_Forward_Ping_Success.png) | Forward ICMP test |
+| 11 | [11_Reverse_Ping_Success.png](03_Evidence_Screenshots/11_Reverse_Ping_Success.png) | Reverse ICMP test |
+| 12 | [12_Private_SSH_Access.png](03_Evidence_Screenshots/12_Private_SSH_Access.png) | Private SSH access |
+| 13 | [13_Controlled_ICMP_Failure.png](03_Evidence_Screenshots/13_Controlled_ICMP_Failure.png) | Initial ICMP failure |
+| 14 | [14_Available_Before_Cleanup.png](03_Evidence_Screenshots/14_Available_Before_Cleanup.png) | EC2 resources before cleanup |
+| 15 | [15_Cleanup_Evidence.png](03_Evidence_Screenshots/15_Cleanup_Evidence.png) | Manually redacted cleanup evidence |
+| 16 | [16_ICMP_Recovery_Success.png](03_Evidence_Screenshots/16_ICMP_Recovery_Success.png) | Successful ICMP test after troubleshooting |
+| 17 | [17_Architecture_and_Resource_Inventory.png](03_Evidence_Screenshots/17_Architecture_and_Resource_Inventory.png) | Architecture and resource inventory |
+
+## Troubleshooting Notes
+
+When connectivity between the VPCs does not work, verify the following:
+
+1. The VPC Peering connection is active.
+2. The VPC CIDR blocks do not overlap.
+3. Both relevant route tables contain routes to the peer VPC.
+4. Security groups permit the required source, protocol, and port.
+5. Network ACLs allow the required inbound and outbound traffic.
+6. The destination instance and its operating system permit the test traffic.
+7. SSH usernames, private key permissions, and proxy settings are correct.
+
+A failed ping does not necessarily indicate a broken peering connection. ICMP traffic may be blocked by a security group, network ACL, or operating-system firewall.
+
+## Key Learning Outcomes
 
 Through this project, I practised:
 
 - AWS VPC architecture and IPv4 CIDR planning.
-- VPC peering connection configuration.
-- Route table configuration for private network communication.
+- VPC Peering connection configuration.
+- Route table configuration for communication between VPCs.
 - EC2 instance access using SSH.
-- Bastion-style SSH access and proxy connections.
-- Security group rules for SSH and ICMP.
-- Connectivity verification using PowerShell and Linux terminal commands.
-- Troubleshooting network reachability and documenting cloud infrastructure.
+- Proxy-based SSH connectivity.
+- Security group configuration for SSH and ICMP.
+- Connectivity testing using PowerShell and Linux terminal commands.
+- Troubleshooting network reachability.
+- Documenting cloud infrastructure and implementation evidence.
 
-## 9. Limitations and Future Improvements
+## Security Considerations
 
-- The setup was created as a hands-on learning environment, not a production-ready enterprise network.
-- The public IP and instance state shown in screenshots reflect the environment at the time of testing and may change.
-- Additional validation would be required for application-level connectivity, monitoring, high availability and production security.
-- Future improvements could include private access through AWS Systems Manager Session Manager, tighter security group rules, centralized logging, infrastructure as code and automated connectivity checks.
-- Network architecture and address ranges should be reviewed before using the configuration in a production environment.
+- Keep SSH private keys and credentials outside the repository.
+- Restrict SSH inbound rules to trusted source addresses.
+- Permit only the protocols and ports required for the task.
+- Review security group and network ACL rules before deployment.
+- Check screenshots for AWS account IDs and other sensitive information before sharing them publicly.
+- The cleanup evidence image is identified as manually redacted.
 
-## 10. Evidence and Screenshots
+## Limitations and Future Improvements
 
-Add the original screenshots to a folder named `screenshots/` and use descriptive filenames. Suggested names:
+This project was created as a hands-on learning exercise and is not intended as a production-ready network design.
 
-1. `01-vpc-peering-connection.png` — Active `EWB_VPC_Peering` connection.
-2. `02-vpc1-route-table.png` — VPC 1 route table, including the route to VPC 2.
-3. `03-vpc2-route-table.png` — VPC 2 route table, including the route to VPC 1.
-4. `04-vpc1-security-group.png` — VPC 1 security group rules.
-5. `05-vpc2-security-group.png` — VPC 2 security group rules.
-6. `06-ec2-instances.png` — EC2 instances and their private IP addresses.
-7. `07-ssh-connectivity.png` — SSH connection and TCP port test.
-8. `08-private-ip-ping.png` — Successful cross-VPC ping test.
-9. `09-reverse-ping-test.png` — Reverse-direction connectivity test.
+Possible improvements include:
 
-Use the actual supplied screenshots for these files; do not create replacement screenshots that imply a result was observed when it was not.
+- Use non-overlapping RFC 1918 CIDR ranges for future deployments.
+- Use AWS Systems Manager Session Manager for instance access.
+- Apply more restrictive security group rules.
+- Introduce centralized logging and network monitoring.
+- Automate resource provisioning with AWS CloudFormation or Terraform.
+- Add automated connectivity validation.
 
-## 11. Repository Structure
+## Repository Structure
 
 ```text
 EWB-AWS-Internship/
-├── README.md
-└── screenshots/
-    ├── 01-vpc-peering-connection.png
-    ├── 02-vpc1-route-table.png
-    ├── 03-vpc2-route-table.png
-    ├── 04-vpc1-security-group.png
-    ├── 05-vpc2-security-group.png
-    ├── 06-ec2-instances.png
-    ├── 07-ssh-connectivity.png
-    ├── 08-private-ip-ping.png
-    └── 09-reverse-ping-test.png
+│
+├── 01_Report/
+│   └── AWS-VPC-Peering-Report.pdf
+│
+├── 02_Architecture/
+│   └── AWS_VPC_Peering_Target_Architecture.png
+│
+├── 03_Evidence_Screenshots/
+│   ├── 01_VPC_Peering_Active.png
+│   ├── 02_VPC1_Route_Table.png
+│   ├── 03_VPC2_Route_Table.png
+│   ├── 04_Third_Route_Table.png
+│   ├── 05_VPC1_Security_Group.png
+│   ├── 06_VPC2_Security_Group.png
+│   ├── 07_VPC2_Security_Group_SSH_Rule.png
+│   ├── 08_EC2_Resource_Details_VPC1.png
+│   ├── 09_EC2_Resource_Details_VPC2.png
+│   ├── 10_Forward_Ping_Success.png
+│   ├── 11_Reverse_Ping_Success.png
+│   ├── 12_Private_SSH_Access.png
+│   ├── 13_Controlled_ICMP_Failure.png
+│   ├── 14_Available_Before_Cleanup.png
+│   ├── 15_Cleanup_Evidence.png
+│   ├── 16_ICMP_Recovery_Success.png
+│   └── 17_Architecture_and_Resource_Inventory.png
+│
+└── README.md
 ```
 
 ## Conclusion
 
-This project provided practical experience in connecting separate AWS VPCs through VPC peering. By configuring routes, security group rules and SSH access, I demonstrated private IP communication between EC2 instances and practised troubleshooting connectivity issues.
+This project provided practical experience in connecting two separate AWS VPCs using VPC Peering.
 
-The project strengthened my understanding of AWS networking fundamentals, routing, access control and cloud infrastructure validation.
+By configuring route tables, security groups, EC2 access, and connectivity tests, I gained hands-on experience with AWS networking fundamentals and cloud infrastructure troubleshooting.
 
-## 12. Evidence Screenshot Index
+The project strengthened my understanding of VPC architecture, routing, access control, SSH connectivity, and network validation.
 
-The following evidence images are stored in `03_Evidence_Screenshots/`. Screenshots are copied from the matching evidence gallery images in the portfolio website; image bytes are preserved without re-encoding.
+## References
 
-1. `01_VPC_Peering_Active.png` — Active VPC peering connection.
-2. `02_VPC1_Route_Table.png` — VPC 1 route table.
-3. `03_VPC2_Route_Table.png` — VPC 2 route table.
-4. `04_Third_Route_Table.png` — Additional/third route table.
-5. `05_VPC1_Security_Group.png` — VPC 1 security-group rules.
-6. `06_VPC2_Security_Group.png` — VPC 2 security-group rules.
-7. `07_VPC2_Security_Group_SSH_Rule.png` — SSH rule for VPC 2.
-8. `08_EC2_Resource_Details_VPC1.png` — EC2 resource details for VPC 1.
-9. `09_EC2_Resource_Details_VPC2.png` — EC2 resource details for VPC 2.
-10. `10_Forward_Ping_Success.png` — Successful forward-direction ICMP test.
-11. `11_Reverse_Ping_Success.png` — Successful reverse-direction ICMP test.
-12. `12_Private_SSH_App_B.png` — Private SSH access evidence for App B.
-13. `13_Controlled_ICMP_Failure.png` — Controlled ICMP failure during troubleshooting.
-14. `14_Available_Before_Cleanup.png` — EC2 instances available before cleanup.
-15. `15_Cleanup_Evidence.png` — Manually redacted cleanup/termination evidence, copied without further image editing.
-16. `16_ICMP_Recovery_Success.png` — Successful ICMP test after troubleshooting.
-17. `17_Architecture_and_Resource_Inventory.png` — Architecture and resource inventory evidence.
+- [Amazon VPC CIDR blocks](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html)
+- [How VPC peering connections work](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html)
+- [VPC peering connection routing](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-routing.html)
+
+---
+
+**Project completed as part of the EWB AWS Internship.**
